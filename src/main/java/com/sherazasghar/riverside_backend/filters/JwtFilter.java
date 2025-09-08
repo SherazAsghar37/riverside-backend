@@ -2,7 +2,7 @@ package com.sherazasghar.riverside_backend.filters;
 
 import com.sherazasghar.riverside_backend.domain.entities.User;
 import com.sherazasghar.riverside_backend.repositories.UserRepository;
-import com.sherazasghar.riverside_backend.services.impl.JwtService;
+import com.sherazasghar.riverside_backend.services.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

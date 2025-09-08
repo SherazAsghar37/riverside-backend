@@ -1,22 +1,19 @@
 package com.sherazasghar.riverside_backend.services.impl;
 
 import com.sherazasghar.riverside_backend.domain.entities.User;
-import io.jsonwebtoken.Jwt;
+import com.sherazasghar.riverside_backend.services.JwtService;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.Authentication;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Map;
 
 @Service
-public class JwtService {
+public class JwtServiceImpl implements JwtService {
     @Value("${jwt.secret}")
     private  String SECRET;
     @Value("${jwt.expiration}")

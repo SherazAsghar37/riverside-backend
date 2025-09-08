@@ -1,6 +1,7 @@
 package com.sherazasghar.riverside_backend.config;
 
 import com.sherazasghar.riverside_backend.dtos.responses.ErrorResponseDto;
+import com.sherazasghar.riverside_backend.exceptions.SessionNotFoundException;
 import com.sherazasghar.riverside_backend.exceptions.UserNotFoundException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
@@ -52,5 +53,12 @@ public class GlobalExceptionsHandler {
         final ErrorResponseDto errorResponseDto = new ErrorResponseDto(
                 "An unexpected error occurred. Please try again later.");
         return new ResponseEntity<>(errorResponseDto, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(SessionNotFoundException.class)
+    public ResponseEntity<ErrorResponseDto> handleException(SessionNotFoundException ex) {
+        log.error("SessionNotFoundException error occurred", ex);
+        final ErrorResponseDto errorResponseDto = new ErrorResponseDto(ex.getMessage());
+        return new ResponseEntity<>(errorResponseDto, HttpStatus.BAD_REQUEST);
     }
 }

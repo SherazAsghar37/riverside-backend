@@ -1,7 +1,8 @@
 package com.sherazasghar.riverside_backend.domain.entities;
 
+import com.sherazasghar.riverside_backend.domain.enums.SessionStatusEnum;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Data;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
@@ -11,13 +12,9 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "users")
-@AllArgsConstructor
-@NoArgsConstructor
-@Getter
-@Setter
-@EqualsAndHashCode
-public class User {
+@Table(name = "sessions")
+@Data
+public class Session {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "UUID")
     @Column(nullable = false, updatable = false)
@@ -26,19 +23,24 @@ public class User {
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false, unique = true)
-    private String email;
-
     @Column(nullable = false)
-    private String password;
+    @Enumerated(EnumType.STRING)
+    private SessionStatusEnum status= SessionStatusEnum.CREATED;
 
-    @OneToMany(mappedBy = "host", cascade = {CascadeType.PERSIST,CascadeType.MERGE}, fetch = FetchType.LAZY)
-    private List<Session> sessions = new ArrayList<>();
+    @Column(name = "session_code", nullable = false, unique = true)
+    private String sessionCode;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<SessionParticipant> sessionParticipants = new ArrayList<>();
+    @Column(name = "scheduled_at")
+    private LocalDateTime scheduledAt;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY )
+    @JoinColumn(name = "host_id", nullable = false)
+    private User host;
+
+    @OneToMany(mappedBy = "session", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<SessionParticipant> participants = new ArrayList<>();
+
+    @OneToMany(mappedBy = "session", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<SessionRecordings> sessionRecordings = new ArrayList<>();
 
     @CreatedDate
@@ -48,5 +50,4 @@ public class User {
     @LastModifiedDate
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
-
 }
