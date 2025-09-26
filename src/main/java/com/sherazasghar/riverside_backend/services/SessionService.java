@@ -13,4 +13,8 @@ public interface SessionService {
     List<Session> listSessions(UUID hostId);
 
     Session getSessionFromCode(String sessionCode);
+
+    Session joinSessionAsHost(String sessionCode, UUID hostId);
+
+    Session sessionDetailsFromSessionCode(String sessionCode);
 }

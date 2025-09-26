@@ -14,9 +14,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class SessionCreateRequestDto {
-    @NotBlank(message = "Session name is required")
-    private String name;
-
     @Nullable
     @FutureOrPresent(message = "Scheduled time must be in the present or future")
     private LocalDateTime scheduledAt;

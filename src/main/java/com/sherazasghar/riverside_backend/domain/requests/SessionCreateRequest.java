@@ -11,7 +11,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class SessionCreateRequest {
-    private String name;
     private LocalDateTime scheduledAt;
     private SessionStatusEnum status;
 }

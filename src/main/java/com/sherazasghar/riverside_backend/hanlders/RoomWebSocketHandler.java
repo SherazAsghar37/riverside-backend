@@ -43,7 +43,16 @@ public class RoomWebSocketHandler extends TextWebSocketHandler {
         switch (type) {
             case "join" ->  webSocketService.joinSession(session, message);
             case "leave" -> webSocketService.leaveSession(session);
-            case "message" -> webSocketService.broadcastMessage(session.getId(), message.getPayload());
+            case "getRTPCapabilities"-> webSocketService.onGetRTPCapabilitiesRequest(session);
+            case "createSendTransport"-> webSocketService.onCreateSendTransportRequest(session);
+            case "connectTransport" -> webSocketService.onConnectTransport(session,message);
+            case "transportProducer"-> webSocketService.onTransportProducer(session,message);
+            case "createReceiveTransport"-> webSocketService.onCreateReceiveTransportRequest(session);
+            case "transportConsumer"-> webSocketService.onTransportConsumer(session,message);
+            case "resumeReceiver"-> webSocketService.onResumeReceiver(session,message);
+            case "pauseReceiver"-> webSocketService.onPauseReceiver(session,message);
+            case "closeProducer"-> webSocketService.onCloseProducer(session,message);
+            case "message" -> webSocketService.broadcastMessage( message.getPayload());
         }
     }
 
@@ -54,7 +63,7 @@ public class RoomWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        webSocketService.storeSession(session);
+//        webSocketService.storeSession(session);
     }
 
 

@@ -4,6 +4,7 @@ import com.sherazasghar.riverside_backend.domain.entities.Session;
 import com.sherazasghar.riverside_backend.domain.entities.User;
 import com.sherazasghar.riverside_backend.dtos.requests.SessionCreateRequestDto;
 import com.sherazasghar.riverside_backend.dtos.responses.SessionCreateResponseDto;
+import com.sherazasghar.riverside_backend.dtos.responses.SessionDetailsResponseDto;
 import com.sherazasghar.riverside_backend.dtos.responses.SessionJoinResponseDto;
 import com.sherazasghar.riverside_backend.dtos.responses.SessionsListResponseDto;
 import com.sherazasghar.riverside_backend.mappers.SessionMapper;
@@ -46,6 +47,22 @@ public class SessionController {
             @AuthenticationPrincipal User user){
         return ResponseEntity.ok(
                 sessionMapper.toSessionJoinResponseDto(sessionService.getSessionFromCode(sessionCode)));
+
+    }
+
+    @PostMapping("/join-as-host/{sessionCode}")
+    public ResponseEntity<SessionJoinResponseDto> JoinSessionAsHost(
+            @PathVariable String sessionCode,
+            @AuthenticationPrincipal User user){
+        return ResponseEntity.ok(
+                sessionMapper.toSessionJoinResponseDto(sessionService.joinSessionAsHost(sessionCode, user.getId())));
+
+    }
+    @GetMapping("/information/{sessionCode}")
+    public ResponseEntity<SessionDetailsResponseDto> fetchSessionInformation(
+            @PathVariable String sessionCode){
+        return ResponseEntity.ok(
+                sessionMapper.toSessionDetailsResponseDto(sessionService.sessionDetailsFromSessionCode(sessionCode)));
 
     }
 }

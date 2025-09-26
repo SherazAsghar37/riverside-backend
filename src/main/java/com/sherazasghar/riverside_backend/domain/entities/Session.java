@@ -25,7 +25,7 @@ public class Session {
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private SessionStatusEnum status= SessionStatusEnum.CREATED;
+    private SessionStatusEnum status= SessionStatusEnum.ONGOING;
 
     @Column(name = "session_code", nullable = false, unique = true)
     private String sessionCode;

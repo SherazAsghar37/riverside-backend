@@ -13,6 +13,10 @@ import com.sherazasghar.riverside_backend.utils.SessionUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,7 +31,7 @@ public class SessionServiceImpl implements SessionService {
         User user  = userRepository.findById(hostId).orElseThrow(() -> new UserNotFoundException("User with id " + hostId+" not found"));
         Session session = new Session();
         session.setHost(user);
-        session.setName(request.getName());
+        session.setName(new Date().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime().toString());
         session.setSessionCode(SessionUtils.generateSessionCode());
 
         if(request.getScheduledAt() != null) {
@@ -48,8 +52,36 @@ public class SessionServiceImpl implements SessionService {
         Session session = sessionRepository.findBySessionCode(sessionCode).orElseThrow(() -> new SessionNotFoundException("Session with code " + sessionCode + " not found"));
         if(session.getStatus() == SessionStatusEnum.COMPLETED || session.getStatus() == SessionStatusEnum.CANCELLED) {
             throw new SessionNotFoundException("Session with code " + sessionCode + " not found");
-        }else if(session.getStatus() == SessionStatusEnum.SCHEDULED){
-            throw new SessionNotFoundException("Session with code " + sessionCode + " is not active yet");
-        }return session;
+        }
+        else if(session.getStatus() == SessionStatusEnum.SCHEDULED ){
+            if(session.getScheduledAt().isAfter(Instant.now().atZone(ZoneOffset.UTC).toLocalDateTime())){
+                throw new SessionNotFoundException("Session with code " + sessionCode + " is not active yet");
+            }
+            session.setStatus(SessionStatusEnum.ONGOING);
+            return sessionRepository.save(session);
+        }
+        return session;
+    }
+
+    @Override
+    public Session joinSessionAsHost(String sessionCode, UUID hostId) {
+        Session session = sessionRepository.findBySessionCodeAndHostId(sessionCode,hostId).orElseThrow(() -> new SessionNotFoundException("Session with code " + sessionCode + " not found"));
+
+        if(session.getStatus() == SessionStatusEnum.SCHEDULED ){
+           if(session.getScheduledAt().isAfter(Instant.now().atZone(ZoneOffset.UTC).toLocalDateTime())){
+               throw new SessionNotFoundException("Session with code " + sessionCode + " is not active yet");
+           }
+           session.setStatus(SessionStatusEnum.ONGOING);
+            return sessionRepository.save(session);
+        }else  if(session.getStatus() == SessionStatusEnum.COMPLETED || session.getStatus() == SessionStatusEnum.CANCELLED) {
+            throw new SessionNotFoundException("Session with code " + sessionCode + " not found");
+        }
+        return session;
+    }
+
+    @Override
+    public Session sessionDetailsFromSessionCode(String sessionCode) {
+        Session session = sessionRepository.findBySessionCode(sessionCode).orElseThrow(() -> new SessionNotFoundException("Session with code " + sessionCode + " not found"));
+        return session;
     }
 }

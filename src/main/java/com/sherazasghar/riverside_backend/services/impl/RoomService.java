@@ -1,5 +1,6 @@
 package com.sherazasghar.riverside_backend.services.impl;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.HashSet;
@@ -30,6 +31,15 @@ public class RoomService {
     private String sessionKey(String sessionId) {
         return "session:" + sessionId + ":room";
     }
+    private String producerKey(String producerId){
+        return "producer:" + producerId + ":session";
+    }
+    private String sessionProducerKey(String sessionId){
+        return "session:" + sessionId + ":producers";
+    }
+    private String producerIdToProducerInfoKey(String producerId){
+        return "producer:" + producerId + ":info";
+    }
 
     private String getRoomIdFromSessionId(String sessionId) {
         Object val = redisTemplate.opsForValue().get(sessionKey(sessionId));
@@ -43,13 +53,17 @@ public class RoomService {
         redisTemplate.convertAndSend(roomTopic.getTopic(), payload);
     }
 
+    public void publishToChannel(String channel, String payload) {
+        redisTemplate.convertAndSend(channel, payload);
+    }
+
     public void addUserToRoom(String roomId, String sessionId) throws JsonProcessingException {
         redisTemplate.opsForSet().add(roomKey(roomId), sessionId);
         redisTemplate.opsForValue().set(sessionKey(sessionId), roomId);
 
         Map<String,Object> event = Map.of(
                 "event", "join",
-                "sessionId", sessionId
+                "roomId", sessionId
         );
         publishToRoom(objectMapper.writeValueAsString(event));
     }
@@ -61,9 +75,10 @@ public class RoomService {
             redisTemplate.opsForSet().remove(roomKey, sessionId);
             redisTemplate.delete(sessionKey(sessionId));
         }
+        removeAllProducersFromSession(sessionId);
         Map<String,Object> event = Map.of(
                 "event", "leave",
-                "sessionId", sessionId
+                "roomId", sessionId
         );
         publishToRoom(objectMapper.writeValueAsString(event));
     }
@@ -75,4 +90,41 @@ public class RoomService {
         return s.stream().map(Object::toString).collect(Collectors.toSet());
     }
 
+    public void addProducerToSession( String sessionId, String producerId, String producerInfo) {
+        redisTemplate.opsForSet().add(sessionProducerKey(sessionId), producerId);
+        redisTemplate.opsForValue().set(producerKey(producerId), sessionId);
+        //Storing the producer info against producerId for easy retrieval later
+        redisTemplate.opsForValue().set(producerIdToProducerInfoKey(sessionId), producerInfo);
+    }
+
+    public void removeProducerFromSession(String sessionId, String producerId) {
+        redisTemplate.opsForSet().remove(sessionProducerKey(sessionId), producerId);
+        redisTemplate.delete(producerKey(producerId));
+        redisTemplate.delete(producerIdToProducerInfoKey(producerId));
+    }
+
+    public void removeAllProducersFromSession(String sessionId) {
+        Set<Object> producers = redisTemplate.opsForSet().members(sessionProducerKey(sessionId));
+        if (producers != null) {
+            for (Object producerId : producers) {
+                redisTemplate.delete(producerKey(producerId.toString()));
+                redisTemplate.delete(producerIdToProducerInfoKey(producerId.toString()));
+            }
+        }
+        redisTemplate.delete(sessionProducerKey(sessionId));
+    }
+
+    public List<String> getAllProducersInRoom(String roomId) {
+        Set<String> sessionIds = getSessionIdsInRoom(roomId);
+        return sessionIds.stream()
+                .flatMap(sessionId -> {
+                    Set<Object> producers = redisTemplate.opsForSet().members(sessionProducerKey(sessionId));
+                    if (producers != null) {
+                        return producers.stream().map(Object::toString);
+                    } else {
+                        return Set.<String>of().stream();
+                    }
+                })
+                .collect(Collectors.toList());
+    }
 }

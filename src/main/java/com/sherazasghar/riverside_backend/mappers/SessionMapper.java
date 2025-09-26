@@ -3,10 +3,7 @@ package com.sherazasghar.riverside_backend.mappers;
 import com.sherazasghar.riverside_backend.domain.entities.Session;
 import com.sherazasghar.riverside_backend.domain.requests.SessionCreateRequest;
 import com.sherazasghar.riverside_backend.dtos.requests.SessionCreateRequestDto;
-import com.sherazasghar.riverside_backend.dtos.responses.SessionCreateResponseDto;
-import com.sherazasghar.riverside_backend.dtos.responses.SessionJoinResponseDto;
-import com.sherazasghar.riverside_backend.dtos.responses.SessionsListResponseDto;
-import com.sherazasghar.riverside_backend.dtos.responses.SessionsListSessionResponseDto;
+import com.sherazasghar.riverside_backend.dtos.responses.*;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -23,4 +20,9 @@ public interface SessionMapper {
 
     @Mapping(target = "sessionId", source = "id")
     SessionJoinResponseDto toSessionJoinResponseDto(Session session);
+
+    @Mapping(target= "hostId", source = "host.id")
+    @Mapping(target= "hostName", source = "host.name")
+    @Mapping(target = "sessionId", source = "id")
+    SessionDetailsResponseDto toSessionDetailsResponseDto(Session session);
 }
