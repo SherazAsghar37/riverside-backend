@@ -43,10 +43,9 @@ public class SessionController {
     }
     @PostMapping("/join-session/{sessionCode}")
     public ResponseEntity<SessionJoinResponseDto> joinSession(
-            @PathVariable String sessionCode,
-            @AuthenticationPrincipal User user){
+            @PathVariable String sessionCode){
         return ResponseEntity.ok(
-                sessionMapper.toSessionJoinResponseDto(sessionService.getSessionFromCode(sessionCode)));
+                sessionMapper.toSessionJoinResponseDto(sessionService.getSessionFromSessionCode(sessionCode)));
 
     }
 

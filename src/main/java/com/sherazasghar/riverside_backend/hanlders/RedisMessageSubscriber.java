@@ -37,9 +37,9 @@ public class RedisMessageSubscriber implements MessageListener {
                 case RedisChannels.RESPONSE_GET_ROUTER_RTP_CAPABILITIES ->redisEventsHandler.onRouterRTPCapabilities(payload);
                 case RedisChannels.RESPONSE_CREATE_SEND_TRANSPORT -> redisEventsHandler.onCreateSendTransport(payload);
                 case RedisChannels.RESPONSE_CONNECT_TRANSPORT -> redisEventsHandler.onConnectTransport(payload);
-                case RedisChannels.RESPONSE_TRANSPORT_PRODUCER -> redisEventsHandler.onTransportProducer(payload);
+                case RedisChannels.RESPONSE_CREATE_PRODUCER -> redisEventsHandler.onProducerCreated(payload);
                 case RedisChannels.RESPONSE_CREATE_RECV_TRANSPORT -> redisEventsHandler.onCreateReceiveTransport(payload);
-                case RedisChannels.RESPONSE_TRANSPORT_CONSUMER -> redisEventsHandler.onTransportConsumer(payload);
+                case RedisChannels.RESPONSE_CREATE_CONSUMER -> redisEventsHandler.onConsumerCreated(payload);
             }
 
 

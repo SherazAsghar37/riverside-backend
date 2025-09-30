@@ -4,8 +4,7 @@ import com.sherazasghar.riverside_backend.domain.entities.Session;
 import com.sherazasghar.riverside_backend.domain.entities.User;
 import com.sherazasghar.riverside_backend.domain.enums.SessionStatusEnum;
 import com.sherazasghar.riverside_backend.domain.requests.SessionCreateRequest;
-import com.sherazasghar.riverside_backend.exceptions.SessionNotFoundException;
-import com.sherazasghar.riverside_backend.exceptions.UserNotFoundException;
+import com.sherazasghar.riverside_backend.exceptions.*;
 import com.sherazasghar.riverside_backend.repositories.SessionRepository;
 import com.sherazasghar.riverside_backend.repositories.UserRepository;
 import com.sherazasghar.riverside_backend.services.SessionService;
@@ -48,33 +47,30 @@ public class SessionServiceImpl implements SessionService {
     }
 
     @Override
-    public Session getSessionFromCode(String sessionCode) {
-        Session session = sessionRepository.findBySessionCode(sessionCode).orElseThrow(() -> new SessionNotFoundException("Session with code " + sessionCode + " not found"));
-        if(session.getStatus() == SessionStatusEnum.COMPLETED || session.getStatus() == SessionStatusEnum.CANCELLED) {
-            throw new SessionNotFoundException("Session with code " + sessionCode + " not found");
-        }
-        else if(session.getStatus() == SessionStatusEnum.SCHEDULED ){
-            if(session.getScheduledAt().isAfter(Instant.now().atZone(ZoneOffset.UTC).toLocalDateTime())){
-                throw new SessionNotFoundException("Session with code " + sessionCode + " is not active yet");
-            }
-            session.setStatus(SessionStatusEnum.ONGOING);
-            return sessionRepository.save(session);
-        }
-        return session;
+    public Session getSessionFromSessionCode(String sessionCode) {
+        Session session = sessionRepository.findBySessionCode(sessionCode.trim()).orElseThrow(() -> new SessionNotFoundException("Session with code " + sessionCode + " not found"));
+        return sessionStatusValidation(sessionCode, session);
     }
 
     @Override
     public Session joinSessionAsHost(String sessionCode, UUID hostId) {
         Session session = sessionRepository.findBySessionCodeAndHostId(sessionCode,hostId).orElseThrow(() -> new SessionNotFoundException("Session with code " + sessionCode + " not found"));
+        return sessionStatusValidation(sessionCode, session);
+    }
 
-        if(session.getStatus() == SessionStatusEnum.SCHEDULED ){
+    private Session sessionStatusValidation(String sessionCode, Session session) {
+        if(session.getStatus() == SessionStatusEnum.COMPLETED ) {
+            throw new SessionCompletedException("Session with code " + sessionCode + " is already completed" );
+        }
+        else if( session.getStatus() == SessionStatusEnum.CANCELLED) {
+            throw new SessionCancelledException("Session with code " + sessionCode + " is cancelled" );
+        }
+        else if(session.getStatus() == SessionStatusEnum.SCHEDULED ){
            if(session.getScheduledAt().isAfter(Instant.now().atZone(ZoneOffset.UTC).toLocalDateTime())){
-               throw new SessionNotFoundException("Session with code " + sessionCode + " is not active yet");
+               throw new SessionNotStartedException("Session with code " + sessionCode + " is not active yet");
            }
            session.setStatus(SessionStatusEnum.ONGOING);
             return sessionRepository.save(session);
-        }else  if(session.getStatus() == SessionStatusEnum.COMPLETED || session.getStatus() == SessionStatusEnum.CANCELLED) {
-            throw new SessionNotFoundException("Session with code " + sessionCode + " not found");
         }
         return session;
     }

@@ -9,8 +9,8 @@ public class RedisChannels {
     public static final String REQUEST_CREATE_RECV_TRANSPORT = "request:create-recv-transport";
 
     public static final String REQUEST_CONNECT_TRANSPORT = "request:connect-transport";
-    public static final String REQUEST_TRANSPORT_PRODUCER = "request:transport-producer";
-    public static final String REQUEST_TRANSPORT_CONSUMER = "request:transport-consumer";
+    public static final String REQUEST_CREATE_PRODUCER = "request:create-producer";
+    public static final String REQUEST_CREATE_CONSUMER = "request:create-consumer";
 
     public static final String REQUEST_PAUSE = "request:pause";
     public static final String REQUEST_RESUME = "request:resume";
@@ -19,7 +19,7 @@ public class RedisChannels {
     public static final String RESPONSE_CREATE_SEND_TRANSPORT  = "response:create-send-transport";
     public static final String RESPONSE_CREATE_RECV_TRANSPORT  = "response:create-recv-transport";
     public static final String RESPONSE_CONNECT_TRANSPORT  = "response:connect-transport";
-    public static final String RESPONSE_TRANSPORT_PRODUCER  = "response:transport-producer";
-    public static final String RESPONSE_TRANSPORT_CONSUMER  = "response:transport-consumer";
+    public static final String RESPONSE_CREATE_PRODUCER  = "response:create-producer";
+    public static final String RESPONSE_CREATE_CONSUMER  = "response:create-consumer";
 
 }

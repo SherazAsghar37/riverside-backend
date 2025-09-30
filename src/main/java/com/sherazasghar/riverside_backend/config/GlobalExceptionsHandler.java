@@ -1,8 +1,7 @@
 package com.sherazasghar.riverside_backend.config;
 
 import com.sherazasghar.riverside_backend.dtos.responses.ErrorResponseDto;
-import com.sherazasghar.riverside_backend.exceptions.SessionNotFoundException;
-import com.sherazasghar.riverside_backend.exceptions.UserNotFoundException;
+import com.sherazasghar.riverside_backend.exceptions.*;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
@@ -58,6 +57,27 @@ public class GlobalExceptionsHandler {
     @ExceptionHandler(SessionNotFoundException.class)
     public ResponseEntity<ErrorResponseDto> handleException(SessionNotFoundException ex) {
         log.error("SessionNotFoundException error occurred", ex);
+        final ErrorResponseDto errorResponseDto = new ErrorResponseDto(ex.getMessage());
+        return new ResponseEntity<>(errorResponseDto, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(SessionCancelledException.class)
+    public ResponseEntity<ErrorResponseDto> handleException(SessionCancelledException ex) {
+        log.error("SessionCancelledException error occurred", ex);
+        final ErrorResponseDto errorResponseDto = new ErrorResponseDto(ex.getMessage());
+        return new ResponseEntity<>(errorResponseDto, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(SessionCompletedException.class)
+    public ResponseEntity<ErrorResponseDto> handleException(SessionCompletedException ex) {
+        log.error("SessionCompletedException error occurred", ex);
+        final ErrorResponseDto errorResponseDto = new ErrorResponseDto(ex.getMessage());
+        return new ResponseEntity<>(errorResponseDto, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(SessionNotStartedException.class)
+    public ResponseEntity<ErrorResponseDto> handleException(SessionNotStartedException ex) {
+        log.error("SessionNotStartedException error occurred", ex);
         final ErrorResponseDto errorResponseDto = new ErrorResponseDto(ex.getMessage());
         return new ResponseEntity<>(errorResponseDto, HttpStatus.BAD_REQUEST);
     }

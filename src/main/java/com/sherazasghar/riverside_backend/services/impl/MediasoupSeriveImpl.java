@@ -36,13 +36,13 @@ public class MediasoupSeriveImpl implements MediasoupService {
     }
 
     @Override
-    public void transportProducer(String payload) {
-        roomService.publishToChannel(RedisChannels.REQUEST_TRANSPORT_PRODUCER,payload);
+    public void createProducer(String payload) {
+        roomService.publishToChannel(RedisChannels.REQUEST_CREATE_PRODUCER,payload);
     }
 
     @Override
-    public void transportConsumer(String payload) {
-        roomService.publishToChannel(RedisChannels.REQUEST_TRANSPORT_CONSUMER,payload);
+    public void createConsumer(String payload) {
+        roomService.publishToChannel(RedisChannels.REQUEST_CREATE_CONSUMER,payload);
     }
 
     @Override

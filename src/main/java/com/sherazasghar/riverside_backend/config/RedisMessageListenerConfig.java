@@ -33,9 +33,9 @@ public class RedisMessageListenerConfig {
                         new PatternTopic(RedisChannels.RESPONSE_GET_ROUTER_RTP_CAPABILITIES),
                         new PatternTopic(RedisChannels.RESPONSE_CREATE_SEND_TRANSPORT),
                         new PatternTopic(RedisChannels.RESPONSE_CONNECT_TRANSPORT),
-                        new PatternTopic(RedisChannels.RESPONSE_TRANSPORT_PRODUCER),
+                        new PatternTopic(RedisChannels.RESPONSE_CREATE_PRODUCER),
                         new PatternTopic(RedisChannels.RESPONSE_CREATE_RECV_TRANSPORT),
-                        new PatternTopic(RedisChannels.RESPONSE_TRANSPORT_CONSUMER)
+                        new PatternTopic(RedisChannels.RESPONSE_CREATE_CONSUMER)
                 )
         );
         return container;

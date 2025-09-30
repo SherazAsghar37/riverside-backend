@@ -46,9 +46,9 @@ public class RoomWebSocketHandler extends TextWebSocketHandler {
             case "getRTPCapabilities"-> webSocketService.onGetRTPCapabilitiesRequest(session);
             case "createSendTransport"-> webSocketService.onCreateSendTransportRequest(session);
             case "connectTransport" -> webSocketService.onConnectTransport(session,message);
-            case "transportProducer"-> webSocketService.onTransportProducer(session,message);
+            case "createProducer"-> webSocketService.onCreateProducer(session,message);
             case "createReceiveTransport"-> webSocketService.onCreateReceiveTransportRequest(session);
-            case "transportConsumer"-> webSocketService.onTransportConsumer(session,message);
+            case "createConsumer"-> webSocketService.onCreateConsumer(session,message);
             case "resumeReceiver"-> webSocketService.onResumeReceiver(session,message);
             case "pauseReceiver"-> webSocketService.onPauseReceiver(session,message);
             case "closeProducer"-> webSocketService.onCloseProducer(session,message);

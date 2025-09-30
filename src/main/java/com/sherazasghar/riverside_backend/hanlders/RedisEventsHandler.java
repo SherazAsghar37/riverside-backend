@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Component
 public class RedisEventsHandler {
@@ -29,10 +30,11 @@ public class RedisEventsHandler {
 
             // fetch all sessionIds in room and deliver to local sessions
             for (String sessionId : roomService.getSessionIdsInRoom(roomId)) {
+
                 webSocketService.sendToLocalSession(sessionId, payload,excludeCurrentUser);
             }
         } catch (Exception ex) {
-            throw new RuntimeException("Failed to process message", ex);
+            throw new RuntimeException("Failed to broadcast event", ex);
         }
     }
 
@@ -43,7 +45,7 @@ public class RedisEventsHandler {
 
             webSocketService.sendToLocalSessionByUserId(userId, mapper.writeValueAsString(Map.of("type","routerRtpCapabilities","data", map.get("rtpCapabilities"))));
         } catch (Exception ex) {
-            throw new RuntimeException("Failed to process message", ex);
+            throw new RuntimeException("Failed to get router rtp capabilities", ex);
         }
     }
     public void onCreateSendTransport(String payload) {
@@ -53,7 +55,7 @@ public class RedisEventsHandler {
 
             webSocketService.sendToLocalSessionByUserId(userId, mapper.writeValueAsString(Map.of("type","sendTransportCreated","data", map.get("transportOptions"))));
         } catch (Exception ex) {
-            throw new RuntimeException("Failed to process message", ex);
+            throw new RuntimeException("Failed to create sen transport", ex);
         }
     }
     public void onConnectTransport(String payload) {
@@ -64,10 +66,10 @@ public class RedisEventsHandler {
 
             webSocketService.sendToLocalSessionByUserId(userId, mapper.writeValueAsString(Map.of("type", (userType.equals("sender") ? "senderTransportConnected" : "consumerTransportConnected"))));
         } catch (Exception ex) {
-            throw new RuntimeException("Failed to process message", ex);
+            throw new RuntimeException("Failed to connect transport", ex);
         }
     }
-    public void onTransportProducer(String payload) {
+    public void onProducerCreated(String payload) {
         try {
             Map<String, Object> map = mapper.readValue(payload, Map.class);
             String userId = map.get("userId").toString();
@@ -85,21 +87,21 @@ public class RedisEventsHandler {
             // send sessionId to redis backend,
             roomService.addProducerToSession(sessionId, producerId, payload);
         } catch (Exception ex) {
-            throw new RuntimeException("Failed to process message", ex);
+            throw new RuntimeException("Failed to create producer", ex);
         }
     }
 
-    public void onTransportConsumer(String payload) {
+    public void onConsumerCreated(String payload) {
         try {
             Map<String, Object> map = mapper.readValue(payload, Map.class);
+            String participantId = map.get("participantId").toString();
             String userId = map.get("userId").toString();
-            String roomId = map.get("roomId").toString();
-            final List<String> producers = roomService.getAllProducersInRoom(roomId);
 
-            webSocketService.sendToLocalSessionByUserId(userId, mapper.writeValueAsString(Map.of("type","consumerCreated","data", map,"producers", producers)));
+            webSocketService.sendToLocalSessionByUserId(userId, mapper.writeValueAsString(Map.of("type","consumerCreated","data", map,"participantId",participantId
+            )));
 
         } catch (Exception ex) {
-            throw new RuntimeException("Failed to process message", ex);
+            throw new RuntimeException("Failed to create consumer", ex);
         }
     }
 
@@ -107,10 +109,14 @@ public class RedisEventsHandler {
         try {
             Map<String, Object> map = mapper.readValue(payload, Map.class);
             String userId = map.get("userId").toString();
+            String roomId = map.get("roomId").toString();
+            String sessionId = map.get("sessionId").toString();
+            final List<String> producers = roomService.getAllProducersInRoom(roomId,sessionId);
 
-            webSocketService.sendToLocalSessionByUserId(userId, mapper.writeValueAsString(Map.of("type","receiveTransportCreated","data", map.get("transportOptions"))));
+
+            webSocketService.sendToLocalSessionByUserId(userId, mapper.writeValueAsString(Map.of("type","receiveTransportCreated","data", map.get("transportOptions"),"producers", producers)));
         } catch (Exception ex) {
-            throw new RuntimeException("Failed to process message", ex);
+            throw new RuntimeException("Failed to create receive transport", ex);
         }
     }
 }

@@ -68,13 +68,13 @@ public class WebSocketService {
             UUID sessionId=null;
 
             sessions.remove(session.getId());
-            roomService.removeUserFromRoom(session.getId());
 
 
             if( session.getAttributes().get("userId") != null){
                  userId =  UUID.fromString((String) session.getAttributes().get("userId"));
                 userToSession.remove(userId.toString());
             }
+
             if( session.getAttributes().get("sessionId") != null){
                  sessionId =  UUID.fromString((String) session.getAttributes().get("sessionId"));
             }
@@ -83,8 +83,8 @@ public class WebSocketService {
                 return;
             }
 
+            roomService.removeUserFromRoom(session.getId(), userId.toString(),sessionId.toString());
             sessionParticipantService.removeParticipantFromSession(sessionId, userId);
-
 
         }catch ( JsonProcessingException e){
             throw new RuntimeException(e);
@@ -104,7 +104,7 @@ public class WebSocketService {
     public void onCreateReceiveTransportRequest(WebSocketSession session) throws JsonProcessingException {
         mediasoupService.createReceiveTransport(objectMapper.writeValueAsString(
                 Map.of("roomId",(String) session.getAttributes().get("sessionId"),
-                        "userId",(String) session.getAttributes().get("userId"))));
+                        "userId",(String) session.getAttributes().get("userId"),"sessionId", session.getId())));
     }
     public void onConnectTransport(WebSocketSession session, TextMessage message) throws JsonProcessingException {
         final  Map<String, Object> payload = objectMapper.readValue(message.getPayload(), Map.class);
@@ -132,28 +132,42 @@ public class WebSocketService {
                         "consumerId", (String) payload.get("consumerId"),
                         "userId",(String) session.getAttributes().get("userId"))));
     }
-    public void onTransportProducer(WebSocketSession session, TextMessage message) throws JsonProcessingException {
+    public void onCreateProducer(WebSocketSession session, TextMessage message) throws JsonProcessingException {
         final  Map<String, Object> payload = objectMapper.readValue(message.getPayload(), Map.class);
 
-        mediasoupService.transportProducer(objectMapper.writeValueAsString(
+        mediasoupService.createProducer(objectMapper.writeValueAsString(
                 Map.of("roomId",(String) session.getAttributes().get("sessionId"),
                         "userId",(String) session.getAttributes().get("userId"),
                         "transportId", (String) payload.get("transportId"),
                         "sessionId", session.getId(),
                         "kind", (String) payload.get("kind"),
+                        "appData",(String) payload.get("appData"),
                         "rtpParameters", (String) payload.get("rtpParameters")
                         )));
     }
 
-    public void onTransportConsumer(WebSocketSession session, TextMessage message) throws JsonProcessingException {
+    public void onCreateConsumer(WebSocketSession session, TextMessage message) throws JsonProcessingException {
         final  Map<String, Object> payload = objectMapper.readValue(message.getPayload(), Map.class);
 
-        mediasoupService.transportConsumer(objectMapper.writeValueAsString(
+        System.out.println("Room ID: " + (String) session.getAttributes().get("sessionId"));
+        System.out.println("Participant ID: " + (String) payload.get("participantId"));
+        System.out.println("User ID: " + (String) session.getAttributes().get("userId"));
+        System.out.println("Transport ID: " + (String) payload.get("transportId"));
+        System.out.println("Producer ID: " + (String) payload.get("producerId"));
+        System.out.println("Kind: " + (String) payload.get("kind"));
+        System.out.println("RTP Capabilities: " + (String) payload.get("rtpCapabilities"));
+        System.out.println("Session ID: " + session.getId());
+        System.out.println("Payload: " + payload);
+
+        mediasoupService.createConsumer(objectMapper.writeValueAsString(
                 Map.of("roomId",(String) session.getAttributes().get("sessionId"),
+                        "participantId", (String) payload.get("participantId"),
                         "userId",(String) session.getAttributes().get("userId"),
                         "transportId", (String) payload.get("transportId"),
                         "producerId", (String) payload.get("producerId"),
                         "kind", (String) payload.get("kind"),
+                        "sessionId", session.getId(),
+                        "appData",(String) payload.get("appData"),
                         "rtpCapabilities", (String) payload.get("rtpCapabilities")
                 )));
     }
@@ -187,10 +201,15 @@ public class WebSocketService {
 
         Map<String, Object> map = objectMapper.readValue(payload, Map.class);
         Map<String, Object> data = ( Map<String, Object>) map.get("data");
-        String userId = data.get("userId").toString();
-        WebSocketSession mySessionId = userToSession.get(userId);
+        String userId=null;
+        WebSocketSession mySessionId=null;
 
-        if(excludeCurrentUser && mySessionId.getId().equals(sessionId)){
+        if(excludeCurrentUser){
+             userId = data.get("userId").toString();
+             mySessionId = userToSession.get(userId);
+        }
+
+        if(mySessionId!=null&& mySessionId.getId().equals(sessionId)){
             return;
         }
         WebSocketSession session = sessions.get(sessionId);
@@ -202,6 +221,5 @@ public class WebSocketService {
             }
         }
     }
-
 
 }

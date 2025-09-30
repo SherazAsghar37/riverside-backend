@@ -15,9 +15,9 @@ public interface MediasoupService {
 
     public void connectTransport(String payload) ;
 
-    public void transportProducer(String payload) ;
+    public void createProducer(String payload) ;
 
-    public void transportConsumer(String payload) ;
+    public void createConsumer(String payload) ;
 
     public void resumeReceiver(String payload) ;
 
