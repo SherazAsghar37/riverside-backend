@@ -3,7 +3,6 @@ package com.sherazasghar.riverside_backend.constants;
 public class RedisChannels {
     public static final String ROOM_EVENT = "rooms:events";
 
-    public static final String REQUEST_CREATE_ROUTER = "request:create-router";
     public static final String REQUEST_GET_ROUTER_RTP_CAPABILITIES = "request:get-router-rtp-capabilities";
     public static final String REQUEST_CREATE_SEND_TRANSPORT = "request:create-send-transport";
     public static final String REQUEST_CREATE_RECV_TRANSPORT = "request:create-recv-transport";
@@ -14,6 +13,9 @@ public class RedisChannels {
 
     public static final String REQUEST_PAUSE = "request:pause";
     public static final String REQUEST_RESUME = "request:resume";
+
+    public static final String REQUEST_USER_DISCONNECT = "request:user-disconnect";
+    public static final String REQUEST_SESSION_END = "request:session-end";
 
     public static final String RESPONSE_GET_ROUTER_RTP_CAPABILITIES  = "response:get-router-rtp-capabilities";
     public static final String RESPONSE_CREATE_SEND_TRANSPORT  = "response:create-send-transport";

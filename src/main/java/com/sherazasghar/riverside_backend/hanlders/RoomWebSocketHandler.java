@@ -51,6 +51,8 @@ public class RoomWebSocketHandler extends TextWebSocketHandler {
             case "createConsumer"-> webSocketService.onCreateConsumer(session,message);
             case "resumeReceiver"-> webSocketService.onResumeReceiver(session,message);
             case "pauseReceiver"-> webSocketService.onPauseReceiver(session,message);
+            case "pauseProducer"-> webSocketService.onPauseProducer(session,message);
+            case "resumeProducer"-> webSocketService.onResumeProducer(session,message);
             case "closeProducer"-> webSocketService.onCloseProducer(session,message);
             case "message" -> webSocketService.broadcastMessage( message.getPayload());
         }

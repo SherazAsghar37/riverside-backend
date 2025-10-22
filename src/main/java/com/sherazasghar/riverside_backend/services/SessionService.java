@@ -17,4 +17,6 @@ public interface SessionService {
     Session joinSessionAsHost(String sessionCode, UUID hostId);
 
     Session sessionDetailsFromSessionCode(String sessionCode);
+
+    Session endSession(UUID sessionId);
 }

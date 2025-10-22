@@ -37,6 +37,8 @@ public class UserController {
             @Valid @RequestBody UserLoginRequestDto userLoginRequestDto){
         final User user = userService.login(userMapper.toUserLoginRequest(userLoginRequestDto));
         final String token = jwtService.generateJwtToken(user);
-        return new ResponseEntity<>(new UserLoginResponseDto(user.getName(),user.getEmail(),token), HttpStatus.OK);
+        return new ResponseEntity<>(new UserLoginResponseDto(
+                user.getId(),
+                user.getName(),user.getEmail(),token), HttpStatus.OK);
     }
 }

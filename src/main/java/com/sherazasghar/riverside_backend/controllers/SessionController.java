@@ -16,6 +16,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/sessions")
@@ -62,6 +63,13 @@ public class SessionController {
             @PathVariable String sessionCode){
         return ResponseEntity.ok(
                 sessionMapper.toSessionDetailsResponseDto(sessionService.sessionDetailsFromSessionCode(sessionCode)));
+
+    }
+    @PostMapping("/end-session/{sessionId}")
+    public ResponseEntity<SessionDetailsResponseDto> endSession(
+            @PathVariable String sessionId){
+        return ResponseEntity.ok(
+                sessionMapper.toSessionDetailsResponseDto(sessionService.endSession(UUID.fromString(sessionId))));
 
     }
 }

@@ -1,6 +1,8 @@
 package com.sherazasghar.riverside_backend.hanlders;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sherazasghar.riverside_backend.domain.entities.User;
+import com.sherazasghar.riverside_backend.repositories.UserRepository;
 import com.sherazasghar.riverside_backend.services.impl.RoomService;
 import com.sherazasghar.riverside_backend.services.impl.WebSocketService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +11,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 @Component
 public class RedisEventsHandler {
@@ -16,6 +19,8 @@ public class RedisEventsHandler {
     private  RoomService roomService;
     @Autowired
     private WebSocketService webSocketService;
+    @Autowired
+    private UserRepository userRepository;
 
     private final ObjectMapper mapper = new ObjectMapper();
 
@@ -30,7 +35,6 @@ public class RedisEventsHandler {
 
             // fetch all sessionIds in room and deliver to local sessions
             for (String sessionId : roomService.getSessionIdsInRoom(roomId)) {
-
                 webSocketService.sendToLocalSession(sessionId, payload,excludeCurrentUser);
             }
         } catch (Exception ex) {
@@ -76,6 +80,9 @@ public class RedisEventsHandler {
             String sessionId = map.get("sessionId").toString();
             String producerId  = map.get("id").toString();
 
+            final Optional<User> user = userRepository.findById(UUID.fromString(userId));
+            map.put("userName",user.get().getName());
+
             webSocketService.sendToLocalSessionByUserId(userId, mapper.writeValueAsString(Map.of("type","producerCreated","data", map.get("id"))));
 
             webSocketService.broadcastMessage(mapper.writeValueAsString(Map.of(
@@ -83,9 +90,7 @@ public class RedisEventsHandler {
                     "data",map,
                     "roomId", map.get("roomId"),"excludeCurrentUser", true
             )));
-
-            // send sessionId to redis backend,
-            roomService.addProducerToSession(sessionId, producerId, payload);
+            roomService.addProducerToSession(sessionId, producerId, mapper.writeValueAsString(map));
         } catch (Exception ex) {
             throw new RuntimeException("Failed to create producer", ex);
         }

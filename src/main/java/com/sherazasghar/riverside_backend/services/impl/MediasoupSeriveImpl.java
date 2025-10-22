@@ -11,11 +11,6 @@ public class MediasoupSeriveImpl implements MediasoupService {
     private RoomService roomService;
 
     @Override
-    public void createRouter(String roomId) {
-        roomService.publishToChannel(RedisChannels.REQUEST_CREATE_ROUTER,roomId);
-    }
-
-    @Override
     public void getRouterRtpCapabilities(String payload) {
         roomService.publishToChannel(RedisChannels.REQUEST_GET_ROUTER_RTP_CAPABILITIES,payload);
     }
@@ -53,5 +48,15 @@ public class MediasoupSeriveImpl implements MediasoupService {
     @Override
     public void pauseReceiver(String payload) {
         roomService.publishToChannel(RedisChannels.REQUEST_PAUSE,payload);
+    }
+
+    @Override
+    public void userDisconnected(String payload) {
+        roomService.publishToChannel(RedisChannels.REQUEST_USER_DISCONNECT,payload);
+    }
+
+    @Override
+    public void sessionEnded(String payload) {
+        roomService.publishToChannel(RedisChannels.REQUEST_SESSION_END,payload);
     }
 }

@@ -12,6 +12,7 @@ import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -49,7 +50,6 @@ public class WebSocketService {
 
             //room id is same as session id of database.
             roomService.addUserToRoom(sessionId,session.getId());
-            mediasoupService.createRouter(objectMapper.writeValueAsString(Map.of("roomId",sessionId)));
             sessionParticipantService.addParticipantToSession(UUID.fromString(sessionId), UUID.fromString(userId));
 
             userToSession.put(userId, session);
@@ -83,9 +83,15 @@ public class WebSocketService {
                 return;
             }
 
-            roomService.removeUserFromRoom(session.getId(), userId.toString(),sessionId.toString());
             sessionParticipantService.removeParticipantFromSession(sessionId, userId);
 
+            if(roomService.doesRoomExist(sessionId.toString())){
+                roomService.removeUserFromRoom(session.getId(), userId.toString(),sessionId.toString());
+                mediasoupService.userDisconnected(objectMapper.writeValueAsString(
+                        Map.of("roomId",sessionId.toString(),
+                                "userId",userId.toString()
+                        )));
+            }
         }catch ( JsonProcessingException e){
             throw new RuntimeException(e);
         }
@@ -132,6 +138,43 @@ public class WebSocketService {
                         "consumerId", (String) payload.get("consumerId"),
                         "userId",(String) session.getAttributes().get("userId"))));
     }
+
+    public void onPauseProducer(WebSocketSession session, TextMessage message) throws JsonProcessingException {
+          Map<String, Object> payload = objectMapper.readValue(message.getPayload(), Map.class);
+        roomService.setProducerStatus(payload.get("producerId").toString(),false);
+        String roomId = session.getAttributes().get("sessionId").toString();
+        String userId = session.getAttributes().get("userId").toString();
+        payload.put("userId", userId);
+
+        broadcastMessage(objectMapper.writeValueAsString(Map.of(
+                "type","producerPaused",
+                "data",payload,
+                "roomId", roomId,"excludeCurrentUser", true
+        )));
+
+    }
+
+    public void onResumeProducer(WebSocketSession session, TextMessage message) throws JsonProcessingException {
+        final  Map<String, Object> payload = objectMapper.readValue(message.getPayload(), Map.class);
+        final String producerId = payload.get("producerId").toString();
+        roomService.setProducerStatus(producerId,true);
+
+        String sessionId = session.getAttributes().get("sessionId").toString();
+        String userId = session.getAttributes().get("userId").toString();
+
+        final  String producer = roomService.getProducerInfo(payload.get("producerId").toString());
+        final Map<String,Object> data = objectMapper.readValue(producer, Map.class);
+        data.put("producerId", payload.get("producerId").toString());
+        data.put("userId", userId);
+
+        broadcastMessage(objectMapper.writeValueAsString(Map.of(
+                "type","newProducerJoined",
+                "data",data,
+                "roomId", sessionId,"excludeCurrentUser", true
+        )));
+
+    }
+
     public void onCreateProducer(WebSocketSession session, TextMessage message) throws JsonProcessingException {
         final  Map<String, Object> payload = objectMapper.readValue(message.getPayload(), Map.class);
 
@@ -149,22 +192,13 @@ public class WebSocketService {
     public void onCreateConsumer(WebSocketSession session, TextMessage message) throws JsonProcessingException {
         final  Map<String, Object> payload = objectMapper.readValue(message.getPayload(), Map.class);
 
-        System.out.println("Room ID: " + (String) session.getAttributes().get("sessionId"));
-        System.out.println("Participant ID: " + (String) payload.get("participantId"));
-        System.out.println("User ID: " + (String) session.getAttributes().get("userId"));
-        System.out.println("Transport ID: " + (String) payload.get("transportId"));
-        System.out.println("Producer ID: " + (String) payload.get("producerId"));
-        System.out.println("Kind: " + (String) payload.get("kind"));
-        System.out.println("RTP Capabilities: " + (String) payload.get("rtpCapabilities"));
-        System.out.println("Session ID: " + session.getId());
-        System.out.println("Payload: " + payload);
-
         mediasoupService.createConsumer(objectMapper.writeValueAsString(
                 Map.of("roomId",(String) session.getAttributes().get("sessionId"),
-                        "participantId", (String) payload.get("participantId"),
                         "userId",(String) session.getAttributes().get("userId"),
+                        "participantId", (String) payload.get("participantId"),
                         "transportId", (String) payload.get("transportId"),
                         "producerId", (String) payload.get("producerId"),
+                        "userName" , (String) payload.get("userName"),
                         "kind", (String) payload.get("kind"),
                         "sessionId", session.getId(),
                         "appData",(String) payload.get("appData"),
@@ -174,12 +208,16 @@ public class WebSocketService {
 
     public void onCloseProducer(WebSocketSession session, TextMessage message) throws JsonProcessingException {
         final  Map<String, Object> payload = objectMapper.readValue(message.getPayload(), Map.class);
+        String roomId = session.getAttributes().get("sessionId").toString();
 
         roomService.removeProducerFromSession(session.getId(), (String) payload.get("producerId"));
-    }
+        payload.put("userId", session.getAttributes().get("userId").toString());
+        broadcastMessage(objectMapper.writeValueAsString(Map.of(
+                "type","producerPaused",
+                "data",payload,
+                "roomId", roomId,"excludeCurrentUser", true
+        )));
 
-    public void storeSession(WebSocketSession session){
-        sessions.put(session.getId(), session);
     }
 
     public void broadcastMessage( String payload) {
@@ -189,10 +227,12 @@ public class WebSocketService {
     public void sendToLocalSessionByUserId(String userId, String payload){
         WebSocketSession session = userToSession.get(userId);
         if (session != null && session.isOpen()) {
-            try {
-                session.sendMessage(new TextMessage(payload));
-            } catch (Exception ex) {
-                throw new RuntimeException("Unable to send message to user: " + userId, ex);
+            synchronized (session) {
+                try {
+                    session.sendMessage(new TextMessage(payload));
+                } catch (Exception ex) {
+                    throw new RuntimeException("Unable to send message to user: " + userId, ex);
+                }
             }
         }
     }
@@ -219,6 +259,17 @@ public class WebSocketService {
             } catch (Exception ex) {
                 throw new RuntimeException("Unable to send message to session: " + sessionId, ex);
             }
+        }
+    }
+
+    public void onSessionEnded(UUID sessionId) {
+        try{
+            roomService.endRoom(sessionId.toString());
+            mediasoupService.sessionEnded(objectMapper.writeValueAsString(
+                    Map.of("roomId",sessionId.toString()
+                    )));
+        }catch ( Exception e){
+            throw new RuntimeException(e);
         }
     }
 

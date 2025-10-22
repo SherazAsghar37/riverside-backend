@@ -5,6 +5,7 @@ import com.sherazasghar.riverside_backend.domain.entities.User;
 import com.sherazasghar.riverside_backend.domain.enums.SessionStatusEnum;
 import com.sherazasghar.riverside_backend.domain.requests.SessionCreateRequest;
 import com.sherazasghar.riverside_backend.exceptions.*;
+import com.sherazasghar.riverside_backend.hanlders.RoomWebSocketHandler;
 import com.sherazasghar.riverside_backend.repositories.SessionRepository;
 import com.sherazasghar.riverside_backend.repositories.UserRepository;
 import com.sherazasghar.riverside_backend.services.SessionService;
@@ -24,6 +25,7 @@ import java.util.UUID;
 public class SessionServiceImpl implements SessionService {
     private final UserRepository userRepository;
     private final SessionRepository sessionRepository;
+    private final WebSocketService webSocketService;
 
     @Override
     public Session createSession(UUID hostId, SessionCreateRequest request) {
@@ -80,4 +82,15 @@ public class SessionServiceImpl implements SessionService {
         Session session = sessionRepository.findBySessionCode(sessionCode).orElseThrow(() -> new SessionNotFoundException("Session with code " + sessionCode + " not found"));
         return session;
     }
+
+    @Override
+    public Session endSession(UUID sessionId) {
+        Session session = sessionRepository.findById(sessionId).orElseThrow(() -> new SessionNotFoundException("Session with id " + sessionId + " not found"));
+           session.setStatus(SessionStatusEnum.COMPLETED);
+           sessionRepository.save(session);
+            webSocketService.onSessionEnded(sessionId);
+        return session;
+    }
+
+
 }
