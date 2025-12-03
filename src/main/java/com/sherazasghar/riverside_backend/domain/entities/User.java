@@ -39,7 +39,7 @@ public class User {
     private List<SessionParticipant> sessionParticipants = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<SessionRecordings> sessionRecordings = new ArrayList<>();
+    private List<ParticipantRecording> recordings = new ArrayList<>();
 
     @CreatedDate
     @Column(name = "created_at", updatable = false)

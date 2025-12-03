@@ -8,10 +8,7 @@ import com.sherazasghar.riverside_backend.services.impl.WebSocketService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Component
 public class RedisEventsHandler {
@@ -117,9 +114,21 @@ public class RedisEventsHandler {
             String roomId = map.get("roomId").toString();
             String sessionId = map.get("sessionId").toString();
             final List<String> producers = roomService.getAllProducersInRoom(roomId,sessionId);
+            final String sessionRecordingId = roomService.getSessionRecordingIdFromRoomId(roomId);
 
 
-            webSocketService.sendToLocalSessionByUserId(userId, mapper.writeValueAsString(Map.of("type","receiveTransportCreated","data", map.get("transportOptions"),"producers", producers)));
+            Map<String, Object> responsePayload = new HashMap<>();
+            responsePayload.put("type", "receiveTransportCreated");
+            responsePayload.put("data", map.get("transportOptions"));
+            responsePayload.put("producers", producers);
+            responsePayload.put("sessionRecordingId", sessionRecordingId);
+
+            webSocketService.sendToLocalSessionByUserId(
+                    userId,
+                    mapper.writeValueAsString(responsePayload)
+            );
+
+
         } catch (Exception ex) {
             throw new RuntimeException("Failed to create receive transport", ex);
         }

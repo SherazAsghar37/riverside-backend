@@ -10,6 +10,7 @@ import com.sherazasghar.riverside_backend.dtos.responses.SessionsListResponseDto
 import com.sherazasghar.riverside_backend.mappers.SessionMapper;
 import com.sherazasghar.riverside_backend.services.SessionService;
 import jakarta.validation.Valid;
+import jakarta.websocket.server.PathParam;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -42,13 +43,7 @@ public class SessionController {
                         .toList())
         );
     }
-    @PostMapping("/join-session/{sessionCode}")
-    public ResponseEntity<SessionJoinResponseDto> joinSession(
-            @PathVariable String sessionCode){
-        return ResponseEntity.ok(
-                sessionMapper.toSessionJoinResponseDto(sessionService.getSessionFromSessionCode(sessionCode)));
 
-    }
 
     @PostMapping("/join-as-host/{sessionCode}")
     public ResponseEntity<SessionJoinResponseDto> JoinSessionAsHost(
@@ -60,16 +55,20 @@ public class SessionController {
     }
     @GetMapping("/information/{sessionCode}")
     public ResponseEntity<SessionDetailsResponseDto> fetchSessionInformation(
-            @PathVariable String sessionCode){
+            @PathVariable String sessionCode,
+            @AuthenticationPrincipal User user,
+            @PathParam("issHost") boolean isHost){
         return ResponseEntity.ok(
-                sessionMapper.toSessionDetailsResponseDto(sessionService.sessionDetailsFromSessionCode(sessionCode)));
+                sessionMapper.toSessionDetailsResponseDto(
+                        isHost? sessionService.joinSessionAsHost(sessionCode, user.getId()):
+                        sessionService.sessionFormSessionCode(sessionCode)));
 
     }
-    @PostMapping("/end-session/{sessionId}")
+    @PostMapping("/end-session/{sessionCode}")
     public ResponseEntity<SessionDetailsResponseDto> endSession(
-            @PathVariable String sessionId){
+            @PathVariable String sessionCode){
         return ResponseEntity.ok(
-                sessionMapper.toSessionDetailsResponseDto(sessionService.endSession(UUID.fromString(sessionId))));
+                sessionMapper.toSessionDetailsResponseDto(sessionService.endSession(sessionCode)));
 
     }
 }

@@ -19,10 +19,4 @@ public class UserCreateRequestDto {
     @Email(message = "Email is not valid")
     private String email;
 
-    @NotBlank(message = "Password is required")
-    @Length(min = 6, message = "Password must be at least 6 characters long")
-    @Pattern(
-        regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{6,}$",
-        message = "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character")
-    private String password;
 }

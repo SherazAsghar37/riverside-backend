@@ -5,12 +5,14 @@ import com.sherazasghar.riverside_backend.domain.entities.User;
 import com.sherazasghar.riverside_backend.domain.enums.SessionStatusEnum;
 import com.sherazasghar.riverside_backend.domain.requests.SessionCreateRequest;
 import com.sherazasghar.riverside_backend.exceptions.*;
-import com.sherazasghar.riverside_backend.hanlders.RoomWebSocketHandler;
+import com.sherazasghar.riverside_backend.repositories.SessionRecordingsRepository;
 import com.sherazasghar.riverside_backend.repositories.SessionRepository;
 import com.sherazasghar.riverside_backend.repositories.UserRepository;
 import com.sherazasghar.riverside_backend.services.SessionService;
 import com.sherazasghar.riverside_backend.utils.SessionUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -26,6 +28,7 @@ public class SessionServiceImpl implements SessionService {
     private final UserRepository userRepository;
     private final SessionRepository sessionRepository;
     private final WebSocketService webSocketService;
+    private final SessionRecordingsRepository recordingRepository;
 
     @Override
     public Session createSession(UUID hostId, SessionCreateRequest request) {
@@ -49,7 +52,8 @@ public class SessionServiceImpl implements SessionService {
     }
 
     @Override
-    public Session getSessionFromSessionCode(String sessionCode) {
+    @Cacheable(value = "session", key = "#sessionCode", condition = "#result != null && (#result.status.name() == 'COMPLETED' || #result.status.name() == 'CANCELLED')")
+    public Session sessionFormSessionCode(String sessionCode) {
         Session session = sessionRepository.findBySessionCode(sessionCode.trim()).orElseThrow(() -> new SessionNotFoundException("Session with code " + sessionCode + " not found"));
         return sessionStatusValidation(sessionCode, session);
     }
@@ -57,7 +61,8 @@ public class SessionServiceImpl implements SessionService {
     @Override
     public Session joinSessionAsHost(String sessionCode, UUID hostId) {
         Session session = sessionRepository.findBySessionCodeAndHostId(sessionCode,hostId).orElseThrow(() -> new SessionNotFoundException("Session with code " + sessionCode + " not found"));
-        return sessionStatusValidation(sessionCode, session);
+        return  sessionStatusValidation(sessionCode, session);
+
     }
 
     private Session sessionStatusValidation(String sessionCode, Session session) {
@@ -78,17 +83,12 @@ public class SessionServiceImpl implements SessionService {
     }
 
     @Override
-    public Session sessionDetailsFromSessionCode(String sessionCode) {
-        Session session = sessionRepository.findBySessionCode(sessionCode).orElseThrow(() -> new SessionNotFoundException("Session with code " + sessionCode + " not found"));
-        return session;
-    }
-
-    @Override
-    public Session endSession(UUID sessionId) {
-        Session session = sessionRepository.findById(sessionId).orElseThrow(() -> new SessionNotFoundException("Session with id " + sessionId + " not found"));
+    @CacheEvict(value = "session", key = "#sessionCode")
+    public Session endSession(String sessionCode) {
+        Session session = sessionRepository.findBySessionCode(sessionCode).orElseThrow(() -> new SessionNotFoundException("Session with sessionCode " + sessionCode + " not found"));
            session.setStatus(SessionStatusEnum.COMPLETED);
            sessionRepository.save(session);
-            webSocketService.onSessionEnded(sessionId);
+            webSocketService.onSessionEnded(session.getId());
         return session;
     }
 

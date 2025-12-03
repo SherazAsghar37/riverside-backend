@@ -192,6 +192,18 @@ public class WebSocketService {
     public void onCreateConsumer(WebSocketSession session, TextMessage message) throws JsonProcessingException {
         final  Map<String, Object> payload = objectMapper.readValue(message.getPayload(), Map.class);
 
+        System.out.println("RoomId "+ (String) session.getAttributes().get("sessionId"));
+        System.out.println("userId "+ (String) session.getAttributes().get("userId"));
+        System.out.println("transportId "+ (String) session.getAttributes().get("transportId"));
+        System.out.println("producerId "+ (String) payload.get("producerId"));
+        System.out.println("participantId "+ (String) payload.get("participantId"));
+        System.out.println("kind "+ (String) payload.get("kind"));
+        System.out.println("rtpCapabilities "+ (String) payload.get("rtpCapabilities"));
+        System.out.println("sessionId "+ session.getId());
+        System.out.println("appData "+ (String) payload.get("appData"));
+        System.out.println("userName "+ (String) payload.get("userName"));
+        System.out.println("-------------------");
+
         mediasoupService.createConsumer(objectMapper.writeValueAsString(
                 Map.of("roomId",(String) session.getAttributes().get("sessionId"),
                         "userId",(String) session.getAttributes().get("userId"),
@@ -272,5 +284,7 @@ public class WebSocketService {
             throw new RuntimeException(e);
         }
     }
+
+
 
 }

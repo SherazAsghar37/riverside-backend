@@ -41,6 +41,12 @@ public class RoomService {
     private String producerToProducerStatus(String producerId){
         return "producer:" + producerId + ":status";
     }
+    private String roomToSessionRecordingId(String roomId){
+        return "SessionRecording:" + roomId + ":room";
+    }
+    private String sessionRecordingIdToRoomKey(String sessionRecordingId){
+        return "room:" + sessionRecordingId + ":SessionRecording";
+    }
 
     private String getRoomIdFromSessionId(String sessionId) {
         Object val = redisTemplate.opsForValue().get(sessionKey(sessionId));
@@ -192,5 +198,25 @@ public class RoomService {
     public Boolean doesRoomExist(String roomId) {
         String roomKey = roomKey(roomId);
         return Boolean.TRUE.equals(redisTemplate.hasKey(roomKey));
+    }
+
+    public void addSessionRecordingToRoom(String roomId, String sessionRecordingId) {
+        redisTemplate.opsForValue().set(roomToSessionRecordingId(roomId), sessionRecordingId);
+        redisTemplate.opsForValue().set(sessionRecordingIdToRoomKey(sessionRecordingId), roomId);
+    }
+
+    public String getSessionRecordingIdFromRoomId(String roomId) {
+        Object value =
+                redisTemplate.opsForValue().get(roomToSessionRecordingId(roomId));
+        return value == null ? null : value.toString();
+    }
+
+
+    public void removeSessionRecordingFromRoom(String sessionRecordingId) {
+        Object roomId = redisTemplate.opsForValue().get(sessionRecordingIdToRoomKey(sessionRecordingId));
+        if (roomId != null) {
+            redisTemplate.delete(roomToSessionRecordingId(roomId.toString()));
+        }
+        redisTemplate.delete(sessionRecordingIdToRoomKey(sessionRecordingId));
     }
 }

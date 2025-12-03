@@ -8,6 +8,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -19,22 +20,15 @@ public class SessionRecordings {
     @Column(nullable = false, updatable = false)
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @OneToMany(mappedBy = "sessionRecordings", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<ParticipantRecording> participantRecordings;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "session_id", nullable = false)
     private Session session;
 
-    @Column(name = "recording_url", nullable = false)
-    private String recordingUrl;
-
-    @Column(name = "uploaded_at", nullable = false)
-    private String filename;
-
-    @Column(name = "status", nullable = false)
-    private RecordingStatus status;
+    @Column(name = "is_concluded", nullable = false)
+    private Boolean isConcluded=false;
 
     @CreatedDate
     private LocalDateTime createdAt;

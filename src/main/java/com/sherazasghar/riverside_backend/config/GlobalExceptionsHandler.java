@@ -81,4 +81,10 @@ public class GlobalExceptionsHandler {
         final ErrorResponseDto errorResponseDto = new ErrorResponseDto(ex.getMessage());
         return new ResponseEntity<>(errorResponseDto, HttpStatus.BAD_REQUEST);
     }
+    @ExceptionHandler(io.jsonwebtoken.ExpiredJwtException.class)
+    public ResponseEntity<ErrorResponseDto> handleException(io.jsonwebtoken.ExpiredJwtException ex) {
+        log.error("ExpiredJwtException error occurred", ex);
+        final ErrorResponseDto errorResponseDto = new ErrorResponseDto("JWT Token expired");
+        return new ResponseEntity<>(errorResponseDto, HttpStatus.UNAUTHORIZED);
+    }
 }

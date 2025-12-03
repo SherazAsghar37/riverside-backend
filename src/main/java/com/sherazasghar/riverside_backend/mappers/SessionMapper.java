@@ -6,8 +6,10 @@ import com.sherazasghar.riverside_backend.dtos.requests.SessionCreateRequestDto;
 import com.sherazasghar.riverside_backend.dtos.responses.*;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.springframework.stereotype.Component;
 
 @Mapper(componentModel = "spring",unmappedTargetPolicy = org.mapstruct.ReportingPolicy.IGNORE )
+@Component
 public interface SessionMapper {
     SessionCreateRequest fromDto(SessionCreateRequestDto request);
 
