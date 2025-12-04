@@ -58,7 +58,7 @@ public class SessionRecordingServiceImpl implements SessionRecordingService {
     }
 
     @Override
-    public void stopRecording(UUID userId, String sessionCode) {
+    public SessionRecordings stopRecording(UUID userId, String sessionCode) {
             try{
                 Session session = sessionRepository.findBySessionCodeAndHostId(sessionCode, userId)
                         .orElseThrow(() -> new SessionNotFoundException("Session not found or user is not the host"));
@@ -78,6 +78,8 @@ public class SessionRecordingServiceImpl implements SessionRecordingService {
                         "roomId", session.getId(),"excludeCurrentUser", false
                 )));
                 roomService.removeSessionRecordingFromRoom(sessionRecordings.getId().toString());
+
+                return sessionRecordings;
             }
             catch (JsonProcessingException e) {
                 throw new RuntimeException(e);

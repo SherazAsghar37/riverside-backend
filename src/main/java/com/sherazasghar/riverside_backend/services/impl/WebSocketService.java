@@ -2,10 +2,7 @@ package com.sherazasghar.riverside_backend.services.impl;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sherazasghar.riverside_backend.services.JwtService;
-import com.sherazasghar.riverside_backend.services.MediasoupService;
-import com.sherazasghar.riverside_backend.services.SessionParticipantService;
-import com.sherazasghar.riverside_backend.services.SessionService;
+import com.sherazasghar.riverside_backend.services.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.CloseStatus;
@@ -25,6 +22,7 @@ public class WebSocketService {
     private final SessionParticipantService sessionParticipantService;
     private final JwtService jwtService;
     private final MediasoupService mediasoupService;
+    private final ParticipantsRecordingService participantsRecordingService;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private final Map<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
@@ -81,6 +79,13 @@ public class WebSocketService {
 
             if( session.getAttributes().get("userId") == null || session.getAttributes().get("sessionId") == null){
                 return;
+            }
+
+
+            String sessionRecordingId = roomService.getSessionRecordingIdFromRoomId(sessionId.toString());
+
+            if(sessionRecordingId != null){
+                participantsRecordingService.stopRecording(userId,UUID.fromString(sessionRecordingId));
             }
 
             sessionParticipantService.removeParticipantFromSession(sessionId, userId);

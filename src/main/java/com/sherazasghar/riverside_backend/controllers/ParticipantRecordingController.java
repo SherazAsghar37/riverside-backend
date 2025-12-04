@@ -2,6 +2,7 @@ package com.sherazasghar.riverside_backend.controllers;
 
 import com.sherazasghar.riverside_backend.domain.entities.User;
 import com.sherazasghar.riverside_backend.dtos.requests.StartRecordingRequestDto;
+import com.sherazasghar.riverside_backend.dtos.requests.StopSpecificRecordingRequestDto;
 import com.sherazasghar.riverside_backend.dtos.responses.CreateParticipantRecordingResponseDto;
 import com.sherazasghar.riverside_backend.mappers.ParticipantsRecordingMapper;
 import com.sherazasghar.riverside_backend.services.ParticipantsRecordingService;
@@ -40,6 +41,29 @@ public class ParticipantRecordingController {
     ){
         participantsRecordingService.stopRecording(user.getId(), UUID.fromString(sessionRecordingId));
         return  ResponseEntity.noContent().build();
+
+    }
+
+    @PostMapping("/stop-specific-recording")
+    public ResponseEntity<Void> stopSpecificRecording(
+            @AuthenticationPrincipal User user,
+            @Valid @RequestBody StopSpecificRecordingRequestDto stopSpecificRecordingRequestDto
+    ){
+        participantsRecordingService.stopSpecificRecording(user.getId(), stopSpecificRecordingRequestDto);
+        return  ResponseEntity.noContent().build();
+
+    }
+    @PostMapping("/start-specific-recording")
+    public ResponseEntity<CreateParticipantRecordingResponseDto> startSpecificRecording(
+            @AuthenticationPrincipal User user,
+            @Valid @RequestBody StartRecordingRequestDto startRecordingRequestDto
+    ){
+
+        return  ResponseEntity.ok(
+                participantsRecordingMapper.fromParticipantRecording(
+                        participantsRecordingService.startSpecificRecording(user.getId(), startRecordingRequestDto)
+                )
+        );
 
     }
 

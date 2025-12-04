@@ -1,6 +1,7 @@
 package com.sherazasghar.riverside_backend.services.impl;
 
 import com.sherazasghar.riverside_backend.domain.entities.Session;
+import com.sherazasghar.riverside_backend.domain.entities.SessionRecordings;
 import com.sherazasghar.riverside_backend.domain.entities.User;
 import com.sherazasghar.riverside_backend.domain.enums.SessionStatusEnum;
 import com.sherazasghar.riverside_backend.domain.requests.SessionCreateRequest;
@@ -8,6 +9,8 @@ import com.sherazasghar.riverside_backend.exceptions.*;
 import com.sherazasghar.riverside_backend.repositories.SessionRecordingsRepository;
 import com.sherazasghar.riverside_backend.repositories.SessionRepository;
 import com.sherazasghar.riverside_backend.repositories.UserRepository;
+import com.sherazasghar.riverside_backend.services.ParticipantsRecordingService;
+import com.sherazasghar.riverside_backend.services.SessionRecordingService;
 import com.sherazasghar.riverside_backend.services.SessionService;
 import com.sherazasghar.riverside_backend.utils.SessionUtils;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +31,8 @@ public class SessionServiceImpl implements SessionService {
     private final UserRepository userRepository;
     private final SessionRepository sessionRepository;
     private final WebSocketService webSocketService;
-    private final SessionRecordingsRepository recordingRepository;
+    private final SessionRecordingService sessionRecordingService;
+    private final ParticipantsRecordingService participantsRecordingService;
 
     @Override
     public Session createSession(UUID hostId, SessionCreateRequest request) {
@@ -87,8 +91,11 @@ public class SessionServiceImpl implements SessionService {
     public Session endSession(String sessionCode) {
         Session session = sessionRepository.findBySessionCode(sessionCode).orElseThrow(() -> new SessionNotFoundException("Session with sessionCode " + sessionCode + " not found"));
            session.setStatus(SessionStatusEnum.COMPLETED);
+
            sessionRepository.save(session);
-            webSocketService.onSessionEnded(session.getId());
+           webSocketService.onSessionEnded(session.getId());
+           SessionRecordings sessionRecordings =  sessionRecordingService.stopRecording(session.getHost().getId(),sessionCode);
+           participantsRecordingService.stopAllRecordingsBySessionRecordingId(sessionRecordings.getId());
         return session;
     }
 
